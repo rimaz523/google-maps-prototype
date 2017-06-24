@@ -1,0 +1,149 @@
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style type="text/css">
+            #mapDiv {
+                height : 100%;
+            }
+            #directionsDiv {
+                float : right;
+                width : 25%;
+                height : 600px;
+            }
+        </style>
+
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCEw67hDJNN4bqd_MNKFKw3KaklB0xDF1g"></script>
+
+    </head>
+    <body>
+        <button id="btnRoadMap">RoadMap</button>
+        <button id="btnTerrain">Terrain</button>
+        <button id="btnSatellite">Satellite</button>
+        <button id="btnHybrid">Hybrid</button>
+        <button id="btnTraffic">View Traffic</button>
+        <button id="btnHideTraffic">Hide Traffic</button>
+        <div id="directionsDiv"></div>
+        <div id="mapDiv"></div>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                initialize();
+                
+            });
+            function initialize() {
+                var mapOptions = {
+                    center: new google.maps.LatLng(6.890134, 79.859566),
+                    zoom: 16,
+                    disableDefaultUI: true,
+                    zoomControl: true,
+                    zoomControlOptions: {
+                        position: google.maps.ControlPosition.TOP_RIGHT
+                    },
+//                    panControl : true,
+                    mapTypeControl: true,
+                    scaleControl: true,
+                    streetViewControl: true,
+//                    rotateControl : true,
+                    overviewMapControl: true
+                }
+                var map = new google.maps.Map($("#mapDiv")[0], mapOptions);
+                addButtons(map);
+                createMapMarkers(map);
+            }
+
+            function addButtons(map) {
+                $("#btnRoadMap").click(function () {
+                    map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+                });
+                $("#btnTerrain").click(function () {
+                    map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
+                });
+                $("#btnSatellite").click(function () {
+                    map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
+                });
+                $("#btnHybrid").click(function () {
+                    map.setMapTypeId(google.maps.MapTypeId.HYBRID);
+                });
+//              Adding Traffic Controls
+                var trafficLayer = new google.maps.TrafficLayer();
+                $("#btnTraffic").click(function () {
+                    trafficLayer.setMap(map);
+                });
+                $("#btnHideTraffic").click(function () {
+                    trafficLayer.setMap(null);
+                });
+
+            }
+
+            function createMapMarkers(map) {
+                var officeAddress = "Visakha Private Road, Colombo, Sri Lanka";
+                var myAddress = "Borupana Road, Moratuwa, Sri Lanka";
+                var geocoder = new google.maps.Geocoder();
+                var latLngOffice;
+                var latLngMy;
+                geocoder.geocode({address: officeAddress}, function (results, status) {
+                    latLngOffice = results[0].geometry.location;
+                    showMarker(map, latLngOffice);
+                    geocoder.geocode({address: myAddress}, function (results, status) {
+                        latLngMy = results[0].geometry.location;
+                        showMarker(map, latLngMy, true);
+                        calcRoute(map, latLngMy, latLngOffice);
+                    });
+                });
+
+            }
+
+            function showMarker(map, latlng, hasImage = false) {
+                var icon_hazeem = hasImage ? {
+                    url: "images/hazeem_11.jpg",
+                    scaledSize: new google.maps.Size(40, 40),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(0, 0)
+                } : null;
+
+
+                var mapMarkerOHRM = new google.maps.Marker({
+                    position: latlng,
+                    map: map,
+                    title: "OrangeHRM Office",
+                    icon: icon_hazeem
+                });
+
+                google.maps.event.addListener(mapMarkerOHRM, "click", function () {
+                    alert("you clicked on the icon!");
+//                  FYI : Binding to an info window will look nice
+                });
+
+            }
+
+            function calcRoute(map, latLngMy, latLngOffice) {
+                var directionService = new google.maps.DirectionsService();
+                var directionsDisplay = new google.maps.DirectionsRenderer();
+                directionsDisplay.setMap(map);
+                directionsDisplay.setPanel($("#directionsDiv")[0]);
+                var request = {
+                    origin: latLngMy,
+                    destination: latLngOffice,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                    waypoints: [
+                        {
+                            location: 'Quarry Road, Dehiwala-Mount Lavinia',
+                            stopover: true
+                        }, {
+                            location: 'Boswell Place, Colombo',
+                            stopover: true
+                        }],
+                    provideRouteAlternatives: true,
+                }
+                directionService.route(request, function (result, status) {
+                    directionsDisplay.setDirections(result);
+                })
+            }
+
+
+        </script>
+    </body>
+
+</html>
